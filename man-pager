@@ -12,4 +12,4 @@ else
 fi
 title=$(echo "$title" | perl -nle 's/(.)/sprintf("\\x%02x", ord($1))/ger; print')
 
-</dev/tty vim -c "set ft=man noswf noma nomod nolist ignorecase title | let &titlestring=\"$title\"" =(sed -e 's/\x1b\[[^m]*m//g' $1 | col -b)
+</dev/tty vim -c "set ft=man noswf noma nomod nolist ignorecase title | let &titlestring=\"$title\"" =(sed -e 's/\x1b\[[^m]*m//g; s/\x1b\]8;[^;]*;[^\x1b]*\x1b\\//g' $1 | col -b)
