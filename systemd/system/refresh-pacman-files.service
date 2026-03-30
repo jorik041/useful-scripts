@@ -4,6 +4,11 @@ Description=Refresh pacman files database
 [Service]
 ExecStart=/usr/bin/pacman -Fy
 Type=oneshot
+Restart=on-failure
+RestartSec=10s
+RestartMaxDelaySec=5m
+RestartSteps=5
+TimeoutSec=5min
 
 [Install]
 WantedBy=multi-user.target
