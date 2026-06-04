@@ -6,6 +6,7 @@ use feature qw(say);
 use experimental qw(signatures);
 
 use POSIX qw(mktime);
+use Time::HiRes qw(clock_nanosleep CLOCK_BOOTTIME);
 
 sub parse_time($s) {
     if($s =~ /^(\d{1,2}):(\d{1,2})$/) {
@@ -112,7 +113,7 @@ do {
   };
 
   # XXX assert $sleep_until > time()?
-  sleep($sleep_until - time);
+  clock_nanosleep(CLOCK_BOOTTIME, 1e9 * ($sleep_until - time));
 
   pop_title();
   print "\a";
