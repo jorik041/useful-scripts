@@ -26,29 +26,21 @@ my $dbh = DBI->connect('dbi:SQLite:dbname=' . $db_filename, undef, undef, {
     PrintError => 0,
 });
 
-my $sth = do {
-    local $dbh->{'RaiseError'} = 0;
+my $dump_date_sth = $dbh->prepare(q{SELECT session_id, timestamp, cwd, entry, exit_status FROM history WHERE DATETIME(timestamp, 'unixepoch', 'localtime') LIKE ?});
 
-    $dbh->prepare(q{SELECT session_id, timestamp, cwd, entry, exit_status FROM history WHERE DATETIME(timestamp, 'unixepoch', 'localtime') LIKE ?})
-};
+for my $arg (@ARGV) {
+    my $sth = $dump_date_sth;
 
-for my $date (@ARGV) {
-    if($date eq 'yesterday') {
+    if($arg eq 'yesterday') {
         my ( undef, undef, undef, $day, $month, $year ) = localtime(time - 86_400);
 
         $month++;
         $year += 1_900;
 
-        $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-    }
-    unless($sth) {
-        if($dbh->errstr =~ /no such table/) {
-            next;
-        }
-        die $dbh->errstr;
+        $arg = sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 
-    $sth->execute($date . '%');
+    $sth->execute($arg . '%');
 
     while(my ( $session_id, $timestamp, $cwd, $entry, $exit_status ) = $sth->fetchrow_array) {
         push @{ $sessions{$session_id} }, [
