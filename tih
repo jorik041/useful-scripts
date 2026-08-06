@@ -26,7 +26,8 @@ my $dbh = DBI->connect('dbi:SQLite:dbname=' . $db_filename, undef, undef, {
     PrintError => 0,
 });
 
-my $dump_date_sth = $dbh->prepare(q{SELECT session_id, timestamp, cwd, entry, exit_status FROM history WHERE DATETIME(timestamp, 'unixepoch', 'localtime') LIKE ?});
+my $dump_date_sth = $dbh->prepare(q{SELECT session_id, timestamp, cwd, entry, exit_status FROM history WHERE DATETIME(timestamp, 'unixepoch', 'localtime') LIKE ? || '%'});
+my $dump_sid_sth = $dbh->prepare(q{SELECT session_id, timestamp, cwd, entry, exit_status FROM history WHERE session_id = ?});
 
 for my $arg (@ARGV) {
     my $sth = $dump_date_sth;
@@ -38,9 +39,11 @@ for my $arg (@ARGV) {
         $year += 1_900;
 
         $arg = sprintf('%04d-%02d-%02d', $year, $month, $day);
+    } elsif($arg =~ /^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$/) {
+        $sth = $dump_sid_sth;
     }
 
-    $sth->execute($arg . '%');
+    $sth->execute($arg);
 
     while(my ( $session_id, $timestamp, $cwd, $entry, $exit_status ) = $sth->fetchrow_array) {
         push @{ $sessions{$session_id} }, [
